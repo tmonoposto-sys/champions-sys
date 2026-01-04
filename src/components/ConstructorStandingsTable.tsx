@@ -41,17 +41,17 @@ export const ConstructorStandingsTable = ({ standings, drivers, compact = false 
   };
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto -mx-2 sm:mx-0">
       <table className="w-full">
         <thead>
           <tr className="border-b border-border">
-            <th className="text-left py-3 px-2 text-sm font-semibold text-muted-foreground">POS</th>
-            <th className="text-left py-3 px-2 text-sm font-semibold text-muted-foreground">EQUIPO</th>
+            <th className="text-left py-2 sm:py-3 px-1 sm:px-2 text-xs sm:text-sm font-semibold text-muted-foreground">POS</th>
+            <th className="text-left py-2 sm:py-3 px-1 sm:px-2 text-xs sm:text-sm font-semibold text-muted-foreground">EQUIPO</th>
             {!compact && (
-              <th className="text-center py-3 px-2 text-sm font-semibold text-muted-foreground hidden sm:table-cell">VICTORIAS</th>
+              <th className="text-center py-2 sm:py-3 px-1 sm:px-2 text-xs sm:text-sm font-semibold text-muted-foreground hidden sm:table-cell">VICTORIAS</th>
             )}
-            <th className="text-right py-3 px-2 text-sm font-semibold text-muted-foreground">PTS</th>
-            <th className="w-10"></th>
+            <th className="text-right py-2 sm:py-3 px-1 sm:px-2 text-xs sm:text-sm font-semibold text-muted-foreground">PTS</th>
+            <th className="w-8 sm:w-10"></th>
           </tr>
         </thead>
         <tbody>
@@ -72,10 +72,10 @@ export const ConstructorStandingsTable = ({ standings, drivers, compact = false 
                   style={{ animationDelay: `${index * 50}ms` }}
                   onClick={() => toggleTeam(standing.team.id)}
                 >
-                  <td className="py-4 px-2">
+                  <td className="py-2 sm:py-4 px-1 sm:px-2">
                     <span
                       className={cn(
-                        "inline-flex items-center justify-center w-8 h-8 rounded text-sm font-bold",
+                        "inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded text-xs sm:text-sm font-bold",
                         standing.position === 1 && "bg-primary text-primary-foreground",
                         standing.position === 2 && "bg-muted-foreground text-background",
                         standing.position === 3 && "bg-amber-600 text-foreground",
@@ -85,14 +85,14 @@ export const ConstructorStandingsTable = ({ standings, drivers, compact = false 
                       {standing.position}
                     </span>
                   </td>
-                  <td className="py-4 px-2">
-                    <div className="flex items-center gap-3">
+                  <td className="py-2 sm:py-4 px-1 sm:px-2">
+                    <div className="flex items-center gap-1.5 sm:gap-3">
                       <div
-                        className="w-4 h-10 rounded"
+                        className="w-2 sm:w-4 h-8 sm:h-10 rounded flex-shrink-0"
                         style={{ backgroundColor: standing.team.color }}
                       />
-                      <div>
-                        <span className="font-bold text-foreground">{standing.team.name}</span>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-bold text-sm sm:text-base text-foreground block truncate">{standing.team.name}</span>
                         {/* {principal && (
                           <p className="text-xs text-muted-foreground">Jefe: {principal.name}</p>
                         )} */}
@@ -100,33 +100,35 @@ export const ConstructorStandingsTable = ({ standings, drivers, compact = false 
                     </div>
                   </td>
                   {!compact && (
-                    <td className="py-4 px-2 text-center hidden sm:table-cell">
-                      <span className="text-sm font-semibold text-foreground">{standing.wins}</span>
+                    <td className="py-2 sm:py-4 px-1 sm:px-2 text-center hidden sm:table-cell">
+                      <span className="text-xs sm:text-sm font-semibold text-foreground">{standing.wins}</span>
                     </td>
                   )}
-                  <td className="py-4 px-2 text-right">
-                    <span className="text-lg font-bold text-foreground">{standing.points}</span>
+                  <td className="py-2 sm:py-4 px-1 sm:px-2 text-right">
+                    <span className="text-sm sm:text-base md:text-lg font-bold text-foreground">{standing.points}</span>
                   </td>
-                  <td className="py-4 px-2">
+                  <td className="py-2 sm:py-4 px-1 sm:px-2">
                     {isExpanded ? (
-                      <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                      <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                      <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                     )}
                   </td>
                 </tr>
                 {isExpanded && (
                   <tr key={`${standing.team.id}-drivers`}>
-                    <td colSpan={5} className="bg-muted/20 px-4 py-3">
-                      <div className="pl-8">
-                        <p className="text-sm font-semibold text-muted-foreground mb-2">Pilotos del equipo:</p>
-                        <div className="space-y-2">
+                    <td colSpan={5} className="bg-muted/20 px-2 sm:px-4 py-2 sm:py-3">
+                      <div className="pl-4 sm:pl-8">
+                        <p className="text-xs sm:text-sm font-semibold text-muted-foreground mb-2">Pilotos del equipo:</p>
+                        <div className="space-y-1.5 sm:space-y-2">
                           {teamDrivers.map(driver => (
-                            <div key={driver._id} className="flex items-center gap-3 text-foreground">
-                              <User className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground font-mono">#{driver.number}</span>
-                              <span className="font-medium">{driver.name}</span>
-                              <Badge variant={getStatusVariant(driver.estado)}>{driver.estado}</Badge>
+                            <div key={driver._id} className="flex items-center gap-2 sm:gap-3 text-foreground flex-wrap">
+                              <User className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
+                              <span className="text-[10px] sm:text-xs text-muted-foreground font-mono">#{driver.number}</span>
+                              <span className="font-medium text-xs sm:text-sm">{driver.name}</span>
+                              <Badge variant={getStatusVariant(driver.estado)} className="text-[10px] sm:text-xs">
+                                {driver.estado}
+                              </Badge>
                             </div>
                           ))}
                         </div>

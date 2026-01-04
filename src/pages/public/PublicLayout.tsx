@@ -109,10 +109,10 @@ const PublicLayout: React.FC = () => {
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="bg-card border-b sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <Link to={`/${code}`} className="flex items-center gap-3">
-              <Flag className="h-6 w-6 text-primary" />
-              <span className="font-bold text-xl">{championship?.name}</span>
+          <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+            <Link to={`/${code}`} className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <Flag className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
+              <span className="font-bold text-base sm:text-lg md:text-xl truncate">{championship?.name}</span>
             </Link>
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => (
@@ -120,7 +120,7 @@ const PublicLayout: React.FC = () => {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-colors",
+                    "flex items-center gap-2 px-3 lg:px-4 py-2 rounded-md text-sm transition-colors whitespace-nowrap",
                     isActive(item.path, item.exact)
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted"
@@ -133,27 +133,27 @@ const PublicLayout: React.FC = () => {
             </nav>
           </div>
           {/* Mobile Nav */}
-          <nav className="md:hidden flex border-t overflow-x-auto">
+          <nav className="md:hidden flex border-t overflow-x-auto scrollbar-hide">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm whitespace-nowrap",
+                  "flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 py-2.5 text-xs sm:text-sm whitespace-nowrap min-w-0",
                   isActive(item.path, item.exact)
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-muted"
                 )}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
               </Link>
             ))}
           </nav>
         </header>
 
         {/* Content */}
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <Outlet />
         </main>
       </div>
