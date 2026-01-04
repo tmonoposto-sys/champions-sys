@@ -1,11 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Car, MapPin, Trophy } from "lucide-react";
+import { Users, Car, MapPin, Trophy, Check, Copy } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+
 
 const AdminDashboard: React.FC = () => {
   const { championship } = useAuth();
+  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+  const publicLink = `${window.location.origin}/${championship?.code}`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(publicLink);
+      setCopied(true);
+      toast({
+        title: "Enlace copiado",
+        description: "El enlace fue copiado al portapapeles",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({
+        title: "Error",
+        description: "No se pudo copiar el enlace",
+        variant: "destructive",
+      });
+    }
+  };
 
   const quickLinks = [
     { path: "/admin/teams", label: "Gestionar Escuderías", icon: Car, description: "Añade y edita equipos" },
@@ -41,19 +65,27 @@ const AdminDashboard: React.FC = () => {
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Enlace Público</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-2">
-            Comparte este enlace para que otros vean tu campeonato:
-          </p>
-          <code className="bg-muted px-3 py-2 rounded text-sm block">
-            {window.location.origin}/{championship?.code}
+    <Card>
+      <CardHeader>
+        <CardTitle>Enlace Público</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground mb-2">
+          Comparte este enlace para que otros vean tu campeonato:
+        </p>
+
+        <div className="flex items-center gap-2">
+          <code className="bg-muted px-3 py-2 rounded text-sm flex-1 truncate">
+            {publicLink}
           </code>
-        </CardContent>
-      </Card>
+
+          <Button variant="outline" size="icon" onClick={handleCopy}>
+            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+
     </div>
   );
 };
