@@ -9,16 +9,40 @@ interface Props {
   result?: RaceResult;
   getDriverById: (id: string) => Driver | undefined;
   getTeamById: (teamId: string) => Team | undefined;
+  drivers: Driver[];
 }
 
 const POINTS_RACE = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 const POINTS_SPRINT = [8, 7, 6, 5, 4, 3, 2, 1];
 const POINTS_FASTEST_LAP = 1;
 
-export const RaceCard = ({ gp, result, getDriverById, getTeamById }: Props) => {
+export const RaceCard = ({ gp, result, getDriverById, getTeamById, drivers }: Props) => {
   const [expanded, setExpanded] = useState(false);
-  const hasResults = result && result?.qualifying?.length > 0;
-  const complete = result && result?.qualifying?.length > 0 && result?.race.length > 0;
+  const hasResults = !!result?.qualifying?.length;
+  const complete = hasResults && !!result?.race?.length;
+
+  const qualyWithTimes = (result?.qualifying ?? []).map(q => {
+    const driver = drivers?.find(d => d._id === q.driverId);
+
+    if (!driver) return null;
+
+    return {
+      ...driver,
+      time: q.time
+    };
+  })?.filter(Boolean);
+
+  const driversWithoutTime = drivers.filter(d => d.estado == "Titular")
+    .filter(d => !(result?.qualifying ?? [])?.some(q => q.driverId === d._id))
+    .map(d => ({
+      ...d,
+      time: "--:--"
+    }));
+
+  const dataShowQualy = [
+    ...qualyWithTimes,
+    ...driversWithoutTime
+  ];
 
   const getPositionStyle = (position: number) => {
     if (position === 0) return "bg-primary text-primary-foreground";
@@ -90,9 +114,8 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById }: Props) => {
                 <h4 className="font-semibold text-sm sm:text-base text-foreground">Clasificación</h4>
               </div>
               <div className="space-y-1.5 sm:space-y-2">
-                {result?.qualifying?.map((entry, index) => {
-                  const driver = getDriverById(entry.driverId);
-                  const team = driver ? getTeamById(driver.teamId) : undefined;
+                {dataShowQualy?.map((entry, index) => {
+                  const team = getTeamById(entry.teamId);
                   return (
                     <div
                       key={`qual-${index}`}
@@ -111,7 +134,7 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById }: Props) => {
                         style={{ backgroundColor: team?.color || '#666' }}
                       />
                       <div className="flex-1 flex items-center gap-1 sm:gap-2 min-w-0">
-                        <span className="text-foreground font-medium truncate">{driver?.name || 'Unknown'}</span>
+                        <span className="text-foreground font-medium truncate">{entry?.name || 'Unknown'}</span>
                         <span 
                           className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0"
                           style={{ 
