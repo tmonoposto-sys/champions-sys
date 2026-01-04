@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { ConstructorStanding, Driver, TeamPrincipal } from '@/types/championship';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronUp, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ConstructorStanding } from '@/utils/processData';
+import { Driver } from '@/services/api';
 
 interface Props {
   standings: ConstructorStanding[];
   drivers: Driver[];
-  teamPrincipals: TeamPrincipal[];
   compact?: boolean;
 }
 
@@ -24,17 +24,17 @@ const getStatusVariant = (estado: string) => {
   }
 };
 
-export const ConstructorStandingsTable = ({ standings, drivers, teamPrincipals, compact = false }: Props) => {
+export const ConstructorStandingsTable = ({ standings, drivers, compact = false }: Props) => {
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
   const displayStandings = compact ? standings.slice(0, 5) : standings;
 
   const getTeamDrivers = (teamId: string) => {
-    return drivers.filter(driver => driver.team === teamId);
+    return drivers.filter(driver => driver.teamId === teamId);
   };
 
-  const getTeamPrincipal = (teamId: string) => {
-    return teamPrincipals.find(tp => tp.teamId === teamId);
-  };
+  // const getTeamPrincipal = (teamId: string) => {
+  //   return teamPrincipals.find(tp => tp.teamId === teamId);
+  // };
 
   const toggleTeam = (teamId: string) => {
     setExpandedTeam(expandedTeam === teamId ? null : teamId);
@@ -57,7 +57,7 @@ export const ConstructorStandingsTable = ({ standings, drivers, teamPrincipals, 
         <tbody>
           {displayStandings.map((standing, index) => {
             const teamDrivers = getTeamDrivers(standing.team.id);
-            const principal = getTeamPrincipal(standing.team.id);
+            //const principal = getTeamPrincipal(standing.team.id);
             const isExpanded = expandedTeam === standing.team.id;
 
             return (
@@ -93,9 +93,9 @@ export const ConstructorStandingsTable = ({ standings, drivers, teamPrincipals, 
                       />
                       <div>
                         <span className="font-bold text-foreground">{standing.team.name}</span>
-                        {principal && (
+                        {/* {principal && (
                           <p className="text-xs text-muted-foreground">Jefe: {principal.name}</p>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </td>
@@ -122,7 +122,7 @@ export const ConstructorStandingsTable = ({ standings, drivers, teamPrincipals, 
                         <p className="text-sm font-semibold text-muted-foreground mb-2">Pilotos del equipo:</p>
                         <div className="space-y-2">
                           {teamDrivers.map(driver => (
-                            <div key={driver.id} className="flex items-center gap-3 text-foreground">
+                            <div key={driver._id} className="flex items-center gap-3 text-foreground">
                               <User className="w-4 h-4 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground font-mono">#{driver.number}</span>
                               <span className="font-medium">{driver.name}</span>

@@ -6,10 +6,9 @@ import { useChampionshipData } from '@/hooks/useChampionshipData';
 import { Link } from 'react-router-dom';
 import { Trophy, Users, Flag, Calendar, ArrowRight } from 'lucide-react';
 import { countDrivers } from '@/utils/countdrivers';
-import { usePublicChampionship } from './public/PublicLayout';
 
 const Index = () => {
-  const { data, loading, error, calculateDriverStandings, calculateConstructorStandings } = usePublicChampionship();
+  const { data, loading, error, calculateDriverStandings, calculateConstructorStandings } = useChampionshipData();
 
   if (loading) {
     return (
@@ -123,7 +122,7 @@ const Index = () => {
                 </Link>
               </div>
               <div className="p-4">
-                <DriverStandingsTable standings={driverStandings} compact />
+                {/* <DriverStandingsTable standings={driverStandings} compact /> */}
               </div>
             </div>
 
@@ -139,7 +138,7 @@ const Index = () => {
                 </Link>
               </div>
               <div className="p-4">
-                <ConstructorStandingsTable standings={constructorStandings} drivers={data.drivers} teamPrincipals={data.teamPrincipals} compact />
+                {/* <ConstructorStandingsTable standings={constructorStandings} drivers={data.drivers} teamPrincipals={data.teamPrincipals} compact /> */}
               </div>
             </div>
           </div>

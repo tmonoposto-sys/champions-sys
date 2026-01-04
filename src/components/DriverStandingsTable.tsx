@@ -1,6 +1,6 @@
-import { DriverStanding } from '@/types/championship';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { DriverStanding } from '@/utils/processData';
 
 interface Props {
   standings: DriverStanding[];
