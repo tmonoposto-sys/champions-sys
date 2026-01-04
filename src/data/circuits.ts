@@ -31,6 +31,7 @@ export const F1_CIRCUITS: F1Circuit[] = [
   { id: "lasvegas", name: "Gran Premio de Las Vegas", circuit: "Circuito Callejero de Las Vegas", country: "Estados Unidos", flag: "🇺🇸" },
   { id: "qatar", name: "Gran Premio de Catar", circuit: "Circuito Internacional de Losail", country: "Catar", flag: "🇶🇦" },
   { id: "abudhabi", name: "Gran Premio de Abu Dabi", circuit: "Circuito de Yas Marina", country: "Emiratos Árabes Unidos", flag: "🇦🇪" },
+  { id: "turkey", name: "Gran Premio de Turquía", circuit: "Istanbul Park", country: "Turquía", flag: "🇹🇷" }
 ];
 
 export const getCircuitById = (id: string): F1Circuit | undefined => {
