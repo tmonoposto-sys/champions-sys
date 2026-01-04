@@ -1,79 +1,44 @@
 import React from "react";
 import { usePublicChampionship } from "./PublicLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { getCircuitById } from "@/data/circuits";
-import { Zap, CloudRain, Timer, CheckCircle } from "lucide-react";
+import { Calendar } from "lucide-react";
+import { RaceCard } from "@/components/RaceCard";
 
 const PublicCalendar: React.FC = () => {
-  const { races, results, drivers, getDriverById } = usePublicChampionship();
-
-  const getWinner = (raceId: string) => {
-    const result = results.find((r) => r.raceId === raceId);
-    if (result?.race?.[0]) {
-      const driver = drivers.find((d) => d?._id === result.race[0]);
-      return driver?.name;
-    }
-    return null;
-  };
-
-  const hasResults = (raceId: string) => {
-    const result = results.find((r) => r.raceId === raceId);
-    return result && result.race && result.race.length > 0;
-  };
+  const {  races, results,  getDriverById, getTeamById } = usePublicChampionship();
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Calendario</h1>
+    <div className="min-h-screen bg-background">
+      <section className="gradient-f1 py-12">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-secondary rounded flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-secondary-foreground" />
+            </div>
+            <div>
+              <p className="text-primary-foreground/70">{races.length} Grandes Premios</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div className="grid gap-4">
-        {races.map((race) => {
-          const circuit = getCircuitById(race.circuitId);
-          const winner = getWinner(race?._id);
-          const completed = hasResults(race?._id);
-
-          return (
-            <Card key={race?._id} className={completed ? "border-green-500/30" : ""}>
-              <CardContent className="py-4">
-                <div className="flex items-center gap-4">
-                  <div className="bg-muted rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg">
-                    {race.order}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-2xl">{circuit?.flag}</span>
-                      <span className="font-bold text-lg">{circuit?.name || race.circuitId}</span>
-                      {race.isSprint && (
-                        <span className="bg-yellow-500/20 text-yellow-600 text-xs px-2 py-1 rounded flex items-center gap-1">
-                          <Zap className="h-3 w-3" /> Sprint
-                        </span>
-                      )}
-                      {race.isRain && (
-                        <span className="bg-blue-500/20 text-blue-600 text-xs px-2 py-1 rounded flex items-center gap-1">
-                          <CloudRain className="h-3 w-3" /> Lluvia
-                        </span>
-                      )}
-                      {completed && (
-                        <span className="bg-green-500/20 text-green-600 text-xs px-2 py-1 rounded flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" /> Completada
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{circuit?.circuit}</p>
-                  </div>
-                  {winner && (
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Ganador</p>
-                      <p className="font-bold">{winner}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <section className="py-8">
+        <div className="container mx-auto px-4">
+          <div className="space-y-4">
+            {races.map(gp => (
+              <RaceCard
+                key={gp._id}
+                gp={gp}
+                result={results.find(r => r.raceId === gp._id)}
+                getDriverById={getDriverById}
+                getTeamById={getTeamById}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
+
 };
 
 export default PublicCalendar;

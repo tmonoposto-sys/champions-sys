@@ -1,17 +1,21 @@
-import { GrandPrix, RaceResult, Driver, Team, PointsSystem } from '@/types/championship';
 import { ChevronRight, Trophy, Clock, Zap, CloudRain, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { Driver, Race, RaceResult, Team } from '@/services/api';
+import { F1_CIRCUITS } from '@/data/circuits';
 
 interface Props {
-  gp: GrandPrix;
+  gp: Race;
   result?: RaceResult;
-  getDriverById: (id: number) => Driver | undefined;
+  getDriverById: (id: string) => Driver | undefined;
   getTeamById: (teamId: string) => Team | undefined;
-  pointsSystem: PointsSystem;
 }
 
-export const RaceCard = ({ gp, result, getDriverById, getTeamById, pointsSystem }: Props) => {
+const POINTS_RACE = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+const POINTS_SPRINT = [8, 7, 6, 5, 4, 3, 2, 1];
+const POINTS_FASTEST_LAP = 1;
+
+export const RaceCard = ({ gp, result, getDriverById, getTeamById }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const hasResults = result && result?.qualifying?.length > 0;
   const complete = result && result?.qualifying?.length > 0 && result?.race.length > 0;
@@ -22,6 +26,8 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, pointsSystem 
     if (position === 2) return "bg-amber-600 text-foreground";
     return "bg-muted text-foreground";
   };
+
+  const circuit = F1_CIRCUITS.find(c => c.id === gp.circuitId);
 
   return (
     <div
@@ -35,10 +41,10 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, pointsSystem 
         className="w-full p-4 flex items-center justify-between text-left"
       >
         <div className="flex items-center gap-4">
-          <span className="text-3xl">{gp.flag}</span>
+          <span className="text-3xl">{circuit.flag}</span>
           <div>
-            <h3 className="font-bold text-foreground">{gp.name}</h3>
-            <p className="text-sm text-muted-foreground">{gp.circuit}</p>
+            <h3 className="font-bold text-foreground">{circuit.name}</h3>
+            <p className="text-sm text-muted-foreground">{circuit.circuit}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -84,7 +90,7 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, pointsSystem 
               <div className="space-y-2">
                 {result?.qualifying?.map((entry, index) => {
                   const driver = getDriverById(entry.driverId);
-                  const team = driver ? getTeamById(driver.team) : undefined;
+                  const team = driver ? getTeamById(driver.teamId) : undefined;
                   return (
                     <div
                       key={`qual-${index}`}
@@ -139,13 +145,13 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, pointsSystem 
               <div className="space-y-2">
                 {result?.race?.map((driverId, index) => {
                   const driver = getDriverById(driverId);
-                  const team = driver ? getTeamById(driver.team) : undefined;
-                  const racePoints = gp.isSprint ? pointsSystem.sprint : pointsSystem.race;
+                  const team = driver ? getTeamById(driver.teamId) : undefined;
+                  const racePoints = gp.isSprint ? POINTS_SPRINT : POINTS_RACE;
                   let points = racePoints[index] || 0;
                   const hasFastestLap = result.fastestLap === driverId;
                   const fastestLapEligible = hasFastestLap && index < 10;
                   if (fastestLapEligible) {
-                    points += pointsSystem.fastestLap;
+                    points += POINTS_FASTEST_LAP;
                   }
                   return (
                     <div
