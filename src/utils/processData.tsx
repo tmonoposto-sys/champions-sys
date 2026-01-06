@@ -25,15 +25,15 @@ export const useDriverStandings = (drivers: Driver[], results: RaceResult[], rac
 
     drivers
     .filter((d) => d.estado !== "Expiloto")
-    .forEach((driver) => {
+    ?.forEach((driver) => {
     standings.set(driver?._id, { points: 0, wins: 0, podiums: 0 });
     });
 
-    results.forEach((result) => {
+    results?.forEach((result) => {
         const race = races.find((r) => r?._id === result.raceId);
         const points = race?.isSprint ? POINTS_SPRINT : POINTS_RACE;
 
-        result.race.forEach((driverId, position) => {
+        result.race?.forEach((driverId, position) => {
             const current = standings.get(driverId);
             if (current && points[position]) {
                 current.points += points[position];
@@ -72,15 +72,15 @@ export const useDriverStandings = (drivers: Driver[], results: RaceResult[], rac
 
 export const useConstructorStandings = (teams: Team[], results: RaceResult[], races: Race[], drivers: Driver[]): ConstructorStanding[] => {
     const standings = new Map<string, { points: number; wins: number }>();
-    teams.forEach((team) => {
+    teams?.forEach((team) => {
         standings.set(team?._id, { points: 0, wins: 0 });
     });
 
-    results.forEach((result) => {
+    results?.forEach((result) => {
         const race = races.find((r) => r?._id === result.raceId);
         const points = race?.isSprint ? POINTS_SPRINT : POINTS_RACE;
 
-        result.race.forEach((driverId, position) => {
+        result.race?.forEach((driverId, position) => {
             const driver = drivers.find((d) => d?._id === driverId);
             if (driver && driver.estado !== "Expiloto") {
                 const current = standings.get(driver.teamId);

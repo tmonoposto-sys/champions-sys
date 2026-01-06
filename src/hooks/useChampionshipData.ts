@@ -32,15 +32,15 @@ export const useChampionshipData = () => {
 
     const standings: Map<number, { points: number; wins: number; podiums: number }> = new Map();
 
-    data.drivers.filter(driver => driver.estado != "Expiloto").forEach(driver => {
+    data.drivers.filter(driver => driver.estado != "Expiloto")?.forEach(driver => {
       standings.set(driver.id, { points: 0, wins: 0, podiums: 0 });
     });
 
-    Object.entries(data.results).forEach(([gpId, result]) => {
+    Object.entries(data.results)?.forEach(([gpId, result]) => {
       const gp = data.grandPrix.find(g => g.id.toString() === gpId);
       const racePoints = gp?.isSprint ? data.pointsSystem.sprint : data.pointsSystem.race;
       
-      result.race.forEach((driverId, position) => {
+      result.race?.forEach((driverId, position) => {
         const driver = getDriverById(driverId);
         if (driver && driver.estado != "Expiloto") {
           const current = standings.get(driverId);
@@ -88,15 +88,15 @@ export const useChampionshipData = () => {
 
     const standings: Map<string, { points: number; wins: number }> = new Map();
 
-    data.teams.forEach(team => {
+    data.teams?.forEach(team => {
       standings.set(team.id, { points: 0, wins: 0 });
     });
 
-    Object.entries(data.results).forEach(([gpId, result]) => {
+    Object.entries(data.results)?.forEach(([gpId, result]) => {
       const gp = data.grandPrix.find(g => g.id.toString() === gpId);
       const racePoints = gp?.isSprint ? data.pointsSystem.sprint : data.pointsSystem.race;
       
-      result.race.forEach((driverId, position) => {
+      result.race?.forEach((driverId, position) => {
         const driver = getDriverById(driverId);
         if (driver && driver.estado != "Expiloto") {
           const current = standings.get(driver.team);
