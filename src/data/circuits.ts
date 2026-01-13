@@ -31,7 +31,15 @@ export const F1_CIRCUITS: F1Circuit[] = [
   { id: "lasvegas", name: "Gran Premio de Las Vegas", circuit: "Circuito Callejero de Las Vegas", country: "Estados Unidos", flag: "🇺🇸" },
   { id: "qatar", name: "Gran Premio de Catar", circuit: "Circuito Internacional de Losail", country: "Catar", flag: "🇶🇦" },
   { id: "abudhabi", name: "Gran Premio de Abu Dabi", circuit: "Circuito de Yas Marina", country: "Emiratos Árabes Unidos", flag: "🇦🇪" },
-  { id: "turkey", name: "Gran Premio de Turquía", circuit: "Istanbul Park", country: "Turquía", flag: "🇹🇷" }
+  { id: "turkey", name: "Gran Premio de Turquía", circuit: "Istanbul Park", country: "Turquía", flag: "🇹🇷" },
+  { id: "germany", name: "Gran Premio de Alemania", circuit: "Hockenheimring", country: "Alemania", flag: "🇩🇪" },
+  { id: "europe", name: "Gran Premio de Europa", circuit: "Circuito Urbano de Valencia", country: "España", flag: "🇪🇸" },
+  { id: "tuscan", name: "Gran Premio de la Toscana", circuit: "Autodromo Internazionale del Mugello", country: "Italia", flag: "🇮🇹" },
+  { id: "malaysia", name: "Gran Premio de Malasia", circuit: "Sepang International Circuit", country: "Malasia", flag: "🇲🇾" },
+  { id: "france", name: "Gran Premio de Francia", circuit: "Circuit Paul Ricard", country: "Francia", flag: "🇫🇷" },
+  { id: "illinois", name: "Gran Premio de Illinois", circuit: "Chicago Street Circuit", country: "Estados Unidos", flag: "🇺🇸" },
+  { id: "south_africa", name: "Gran Premio de Sudáfrica", circuit: "Kyalami Grand Prix Circuit", country: "Sudáfrica", flag: "🇿🇦" },
+  { id: "andalucia", name: "Gran Premio de Andalucía", circuit: "Circuito de Jerez – Ángel Nieto", country: "España", flag: "🇪🇸" }
 ];
 
 export const getCircuitById = (id: string): F1Circuit | undefined => {
