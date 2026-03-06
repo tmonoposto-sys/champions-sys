@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/stores/authStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,13 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 const DriversPage: React.FC = () => {
   const { championship } = useAuth();
@@ -165,7 +159,7 @@ const DriversPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div data-tour="page-drivers" className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Pilotos</h2>
           <p className="text-muted-foreground">Gestiona los pilotos del campeonato</p>
@@ -248,21 +242,13 @@ const DriversPage: React.FC = () => {
             </div>
             <div className="space-y-2">
               <Label>Escudería</Label>
-              <Select
+              <SearchableSelect
                 value={formData.teamId}
                 onValueChange={(value) => setFormData({ ...formData, teamId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona una escudería" />
-                </SelectTrigger>
-                <SelectContent>
-                  {teams.map((team) => (
-                    <SelectItem key={team?._id} value={team?._id}>
-                      {team.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Selecciona una escudería"
+                searchPlaceholder="Buscar escudería..."
+                options={teams.map((team) => ({ value: team._id, label: team.name }))}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="number">Número</Label>
@@ -276,19 +262,17 @@ const DriversPage: React.FC = () => {
             </div>
             <div className="space-y-2">
               <Label>Estado</Label>
-              <Select
+              <SearchableSelect
                 value={formData.estado}
                 onValueChange={(value) => setFormData({ ...formData, estado: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Titular">Titular</SelectItem>
-                  <SelectItem value="Reserva">Reserva</SelectItem>
-                  <SelectItem value="Expiloto">Expiloto</SelectItem>
-                </SelectContent>
-              </Select>
+                placeholder="Selecciona estado"
+                searchPlaceholder="Buscar..."
+                options={[
+                  { value: "Titular", label: "Titular" },
+                  { value: "Reserva", label: "Reserva" },
+                  { value: "Expiloto", label: "Expiloto" },
+                ]}
+              />
             </div>
           </div>
           <DialogFooter>

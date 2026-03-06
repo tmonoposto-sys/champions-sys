@@ -3,8 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-
 // Login
 import LoginPage from "./pages/LoginPage";
 
@@ -15,6 +13,7 @@ import TeamsPage from "./pages/admin/TeamsPage";
 import DriversPage from "./pages/admin/DriversPage";
 import RacesPage from "./pages/admin/RacesPage";
 import ResultsPage from "./pages/admin/ResultsPage";
+import SettingsPage from "./pages/admin/SettingsPage";
 
 // Public
 import PublicLayout from "./pages/public/PublicLayout";
@@ -30,39 +29,32 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Home redirect to login */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            
-            {/* Login */}
-            <Route path="/login" element={<LoginPage />} />
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<LoginPage />} />
 
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="teams" element={<TeamsPage />} />
-              <Route path="drivers" element={<DriversPage />} />
-              <Route path="races" element={<RacesPage />} />
-              <Route path="results" element={<ResultsPage />} />
-            </Route>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="teams" element={<TeamsPage />} />
+            <Route path="drivers" element={<DriversPage />} />
+            <Route path="races" element={<RacesPage />} />
+            <Route path="results" element={<ResultsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
 
-            {/* Public Championship Routes */}
-            <Route path="/:code" element={<PublicLayout />}>
-              <Route index element={<PublicHome />} />
-              <Route path="drivers" element={<PublicDrivers />} />
-              <Route path="constructors" element={<PublicConstructors />} />
-              <Route path="calendar" element={<PublicCalendar />} />
-            </Route>
+          <Route path="/:code" element={<PublicLayout />}>
+            <Route index element={<PublicHome />} />
+            <Route path="drivers" element={<PublicDrivers />} />
+            <Route path="constructors" element={<PublicConstructors />} />
+            <Route path="calendar" element={<PublicCalendar />} />
+          </Route>
 
-            {/* 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

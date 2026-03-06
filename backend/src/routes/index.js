@@ -4,6 +4,7 @@ import * as teamsController from '../controllers/teamsController.js';
 import * as driversController from '../controllers/driversController.js';
 import * as racesController from '../controllers/racesController.js';
 import * as resultsController from '../controllers/resultsController.js';
+import * as circuitsController from '../controllers/circuitsController.js';
 
 const router = express.Router();
 
@@ -11,6 +12,8 @@ const router = express.Router();
 router.post('/championships/login', championshipsController.loginChampionship);
 router.post('/championships/get', championshipsController.getChampionship);
 router.post('/championships/create', championshipsController.createChampionship);
+router.post('/championships/updateUsername', championshipsController.updateUsername);
+router.post('/championships/resetData', championshipsController.resetData);
 
 // Teams routes
 router.post('/teams/list', teamsController.listTeams);
@@ -35,6 +38,12 @@ router.post('/results/list', resultsController.listResults);
 router.post('/results/get', resultsController.getRaceResult);
 router.post('/results/saveQualifying', resultsController.saveQualifyingResult);
 router.post('/results/saveRace', resultsController.saveRaceResult);
+
+// Circuits routes
+router.post('/circuits/list', circuitsController.listCircuits);
+router.post('/circuits/create', circuitsController.createCircuit);
+router.post('/circuits/update', circuitsController.updateCircuit);
+router.post('/circuits/delete', circuitsController.deleteCircuit);
 
 // Health check
 router.get('/health', (req, res) => {

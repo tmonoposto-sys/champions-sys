@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/stores/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -117,7 +117,7 @@ const TeamsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div data-tour="page-teams" className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Escuderías</h2>
           <p className="text-muted-foreground">Gestiona los equipos del campeonato</p>

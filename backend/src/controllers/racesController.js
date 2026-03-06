@@ -22,6 +22,24 @@ export const listRaces = async (req, res) => {
   }
 };
 
+async function normalizeOrders(db, championshipCode) {
+  const races = await db.collection('races')
+    .find({ championshipCode })
+    .sort({ order: 1 })
+    .toArray();
+
+  const ops = races.map((race, i) => ({
+    updateOne: {
+      filter: { _id: race._id },
+      update: { $set: { order: i + 1 } },
+    },
+  }));
+
+  if (ops.length > 0) {
+    await db.collection('races').bulkWrite(ops);
+  }
+}
+
 export const createRace = async (req, res) => {
   try {
     const { code, circuitId, order, isSprint, isRain } = req.body;
@@ -30,15 +48,24 @@ export const createRace = async (req, res) => {
       return res.status(400).json({ error: 'Código, circuitId y orden son requeridos' });
     }
 
+    const championshipCode = code.toUpperCase();
     const db = getDB();
+
+    await db.collection('races').updateMany(
+      { championshipCode, order: { $gte: order } },
+      { $inc: { order: 1 } }
+    );
+
     const result = await db.collection('races').insertOne({
-      championshipCode: code.toUpperCase(),
+      championshipCode,
       circuitId,
       order,
       isSprint: isSprint || false,
       isRain: isRain || false,
       createdAt: new Date(),
     });
+
+    await normalizeOrders(db, championshipCode);
 
     res.json({ success: true, id: result.insertedId.toString() });
   } catch (error) {
@@ -56,10 +83,34 @@ export const updateRace = async (req, res) => {
     }
 
     const db = getDB();
+    const existing = await db.collection('races').findOne({ _id: new ObjectId(id) });
+    if (!existing) {
+      return res.status(404).json({ error: 'Carrera no encontrada' });
+    }
+
+    const oldOrder = existing.order;
+    const championshipCode = existing.championshipCode;
+
+    if (oldOrder !== order) {
+      if (order > oldOrder) {
+        await db.collection('races').updateMany(
+          { championshipCode, _id: { $ne: new ObjectId(id) }, order: { $gt: oldOrder, $lte: order } },
+          { $inc: { order: -1 } }
+        );
+      } else {
+        await db.collection('races').updateMany(
+          { championshipCode, _id: { $ne: new ObjectId(id) }, order: { $gte: order, $lt: oldOrder } },
+          { $inc: { order: 1 } }
+        );
+      }
+    }
+
     await db.collection('races').updateOne(
       { _id: new ObjectId(id) },
       { $set: { circuitId, order, isSprint, isRain, updatedAt: new Date() } }
     );
+
+    await normalizeOrders(db, championshipCode);
 
     res.json({ success: true });
   } catch (error) {
@@ -77,7 +128,12 @@ export const deleteRace = async (req, res) => {
     }
 
     const db = getDB();
+    const existing = await db.collection('races').findOne({ _id: new ObjectId(id) });
     await db.collection('races').deleteOne({ _id: new ObjectId(id) });
+
+    if (existing) {
+      await normalizeOrders(db, existing.championshipCode);
+    }
 
     res.json({ success: true });
   } catch (error) {

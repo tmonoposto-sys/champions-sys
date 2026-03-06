@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate, Link, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { 
   Users, 
@@ -10,12 +10,24 @@ import {
   LogOut, 
   Flag,
   LayoutDashboard,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
+import TourProvider from "@/components/TourProvider";
 
 const AdminLayout: React.FC = () => {
   const { isAuthenticated, championship, logout } = useAuth();
+  const hasHydrated = useAuthStore((s) => s._hasHydrated);
   const location = useLocation();
+
+  if (!hasHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -27,6 +39,7 @@ const AdminLayout: React.FC = () => {
     { path: "/admin/drivers", label: "Pilotos", icon: Users },
     { path: "/admin/races", label: "Carreras", icon: MapPin },
     { path: "/admin/results", label: "Resultados", icon: Trophy },
+    { path: "/admin/settings", label: "Ajustes", icon: Settings },
   ];
 
   const isActive = (path: string, exact?: boolean) => {
@@ -36,6 +49,7 @@ const AdminLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background pb-16 lg:pb-0">
+      <TourProvider />
       {/* Header */}
       <header className="border-b bg-card sticky top-0 z-50">
         <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between">
@@ -64,7 +78,7 @@ const AdminLayout: React.FC = () => {
 
       <div className="flex relative">
         {/* Sidebar Desktop */}
-        <nav className="hidden lg:block w-64 border-r bg-card min-h-[calc(100vh-57px)] p-4">
+        <nav data-tour="sidebar-nav" className="hidden lg:block w-64 border-r bg-card min-h-[calc(100vh-57px)] p-4">
           <div className="space-y-1">
             {navItems.map((item) => (
               <Link
@@ -92,7 +106,7 @@ const AdminLayout: React.FC = () => {
 
       {/* Bottom Navigation Mobile */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t z-50 safe-area-bottom">
-        <div className="grid grid-cols-5 h-16">
+        <div className="grid grid-cols-6 h-16">
           {navItems.map((item) => (
             <Link
               key={item.path}

@@ -35,8 +35,18 @@ export const loginChampionship = (username: string, code: string) =>
 export const getChampionship = (code: string) =>
   callApi<{ code: string; name: string }>("championships", "get", { code });
 
-export const createChampionship = (adminKey: string, code: string, name: string, adminUsername: string) =>
-  callApi("championships", "create", { adminKey, code, name, adminUsername });
+export const createChampionship = (name: string, adminUsername: string) =>
+  callApi<{ success: boolean; id: string; code: string }>("championships", "create", {
+    adminKey: import.meta.env.VITE_SUPER_ADMIN_KEY,
+    name,
+    adminUsername,
+  });
+
+export const updateUsername = (code: string, currentUsername: string, newUsername: string) =>
+  callApi<{ success: boolean }>("championships", "updateUsername", { code, currentUsername, newUsername });
+
+export const resetChampionshipData = (code: string, username: string, target: "results" | "races" | "drivers" | "teams" | "all") =>
+  callApi<{ success: boolean; deleted: Record<string, number> }>("championships", "resetData", { code, username, target });
 
 // Teams
 export const listTeams = (code: string) =>
@@ -90,7 +100,29 @@ export const saveQualifyingResult = (code: string, raceId: string, qualifying: Q
 export const saveRaceResult = (code: string, raceId: string, race: string[], fastestLap?: string) =>
   callApi("results", "saveRace", { code, raceId, race, fastestLap });
 
+// Circuits (custom per championship)
+export const listCustomCircuits = (code: string) =>
+  callApi<CustomCircuit[]>("circuits", "list", { code });
+
+export const createCustomCircuit = (code: string, name: string, circuit: string, country: string, flag: string) =>
+  callApi("circuits", "create", { code, name, circuit, country, flag });
+
+export const updateCustomCircuit = (id: string, name: string, circuit: string, country: string, flag: string) =>
+  callApi("circuits", "update", { id, name, circuit, country, flag });
+
+export const deleteCustomCircuit = (id: string) =>
+  callApi("circuits", "delete", { id });
+
 // Types
+export interface CustomCircuit {
+  _id: string;
+  championshipCode: string;
+  name: string;
+  circuit: string;
+  country: string;
+  flag: string;
+}
+
 export interface Team {
   _id: string;
   championshipCode: string;
