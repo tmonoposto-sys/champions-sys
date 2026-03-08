@@ -98,7 +98,7 @@ export const useChampionshipData = () => {
       
       result.race?.forEach((driverId, position) => {
         const driver = getDriverById(driverId);
-        if (driver && driver.estado != "Expiloto") {
+        if (driver) {
           const current = standings.get(driver.team);
           if (current && racePoints[position]) {
             current.points += racePoints[position];
