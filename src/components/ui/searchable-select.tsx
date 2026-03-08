@@ -46,6 +46,7 @@ export function SearchableSelect({
   renderSelected,
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
+  const listRef = React.useRef<HTMLDivElement>(null);
 
   const allOptions = React.useMemo(() => {
     if (options) return options;
@@ -80,7 +81,7 @@ export function SearchableSelect({
     ));
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -93,10 +94,20 @@ export function SearchableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className={cn("p-0 w-[--radix-popover-trigger-width]", className)} align="start">
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
-          <CommandList>
+      <PopoverContent className={cn("z-[100] p-0 w-[--radix-popover-trigger-width] flex flex-col max-h-[min(70vh,380px)]", className)} align="start">
+        <Command className="flex flex-col min-h-0 max-h-full overflow-hidden">
+          <CommandInput placeholder={searchPlaceholder} className="flex-shrink-0" />
+          <CommandList
+            ref={listRef}
+            className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain scrollbar-thin"
+            onWheel={(e) => {
+              e.stopPropagation();
+              const el = listRef.current;
+              if (!el) return;
+              el.scrollTop += e.deltaY;
+              e.preventDefault();
+            }}
+          >
             <CommandEmpty>{emptyMessage}</CommandEmpty>
             {groups ? (
               groups.map((group) => (

@@ -4,11 +4,14 @@ import { useState } from 'react';
 import { Driver, Race, RaceResult, Team } from '@/services/api';
 import { F1_CIRCUITS } from '@/data/circuits';
 
+type CircuitInfo = { id: string; name: string; circuit: string; country: string; flag: string } | null;
+
 interface Props {
   gp: Race;
   result?: RaceResult;
   getDriverById: (id: string) => Driver | undefined;
   getTeamById: (teamId: string) => Team | undefined;
+  getCircuitInfo?: (circuitId: string) => CircuitInfo;
   drivers: Driver[];
 }
 
@@ -16,7 +19,7 @@ const POINTS_RACE = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 const POINTS_SPRINT = [8, 7, 6, 5, 4, 3, 2, 1];
 const POINTS_FASTEST_LAP = 1;
 
-export const RaceCard = ({ gp, result, getDriverById, getTeamById, drivers }: Props) => {
+export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInfo, drivers }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const hasResults = !!result?.qualifying?.length;
   const complete = hasResults && !!result?.race?.length;
@@ -51,7 +54,12 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, drivers }: Pr
     return "bg-muted text-foreground";
   };
 
-  const circuit = F1_CIRCUITS.find(c => c.id === gp.circuitId);
+  const circuit = getCircuitInfo
+    ? getCircuitInfo(gp.circuitId)
+    : F1_CIRCUITS.find(c => c.id === gp.circuitId) ?? null;
+  const flag = circuit?.flag ?? "🏁";
+  const name = circuit?.name ?? gp.circuitId ?? "Circuito";
+  const circuitName = circuit?.circuit ?? "";
 
   return (
     <div
@@ -65,10 +73,10 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, drivers }: Pr
         className="w-full p-3 sm:p-4 flex items-center justify-between text-left gap-2 sm:gap-4"
       >
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-          <span className="text-2xl sm:text-3xl flex-shrink-0">{circuit.flag}</span>
+          <span className="text-2xl sm:text-3xl flex-shrink-0">{flag}</span>
           <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-sm sm:text-base text-foreground truncate">{circuit.name}</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate">{circuit.circuit}</p>
+            <h3 className="font-bold text-sm sm:text-base text-foreground truncate">{name}</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{circuitName}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">

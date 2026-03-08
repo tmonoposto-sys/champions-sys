@@ -4,7 +4,7 @@ import { Calendar } from "lucide-react";
 import { RaceCard } from "@/components/RaceCard";
 
 const PublicCalendar: React.FC = () => {
-  const { drivers, races, results, getDriverById, getTeamById } = usePublicChampionship();
+  const { drivers, races, results, getDriverById, getTeamById, getCircuitInfo } = usePublicChampionship();
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,6 +31,7 @@ const PublicCalendar: React.FC = () => {
                 result={results?.find(r => r.raceId === gp._id)}
                 getDriverById={getDriverById}
                 getTeamById={getTeamById}
+                getCircuitInfo={getCircuitInfo}
                 drivers={drivers}
               />
             ))}

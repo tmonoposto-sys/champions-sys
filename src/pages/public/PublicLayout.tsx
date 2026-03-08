@@ -1,6 +1,6 @@
-import React, { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode } from "react";
 import { useParams, Outlet, Navigate, Link, useLocation } from "react-router-dom";
-import { getChampionship, listTeams, listDrivers, listRaces, listResults, Team, Driver, Race, RaceResult } from "@/services/api";
+import { getChampionship, listTeams, listDrivers, listRaces, listResults, listCustomCircuits, Team, Driver, Race, RaceResult, CustomCircuit } from "@/services/api";
 import { getCircuitById } from "@/data/circuits";
 import { Loader2, Flag, Users, Car, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,9 +11,11 @@ interface ChampionshipContextType {
   drivers: Driver[];
   races: Race[];
   results: RaceResult[];
+  customCircuits: CustomCircuit[];
   loading: boolean;
   getTeamById: (id: string) => Team | undefined;
   getDriverById: (id: string) => Driver | undefined;
+  getCircuitInfo: (circuitId: string) => { id: string; name: string; circuit: string; country: string; flag: string } | null;
 }
 
 const ChampionshipContext = createContext<ChampionshipContextType | undefined>(undefined);
@@ -34,6 +36,7 @@ const PublicLayout: React.FC = () => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
   const [results, setResults] = useState<RaceResult[]>([]);
+  const [customCircuits, setCustomCircuits] = useState<CustomCircuit[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -52,17 +55,19 @@ const PublicLayout: React.FC = () => {
 
       setChampionship(champResult.data);
 
-      const [teamsResult, driversResult, racesResult, resultsResult] = await Promise.all([
+      const [teamsResult, driversResult, racesResult, resultsResult, circuitsResult] = await Promise.all([
         listTeams(code),
         listDrivers(code),
         listRaces(code),
         listResults(code),
+        listCustomCircuits(code),
       ]);
 
       if (teamsResult.data) setTeams(teamsResult.data);
       if (driversResult.data) setDrivers(driversResult.data);
       if (racesResult.data) setRaces(racesResult.data.sort((a, b) => a.order - b.order));
       if (resultsResult.data) setResults(resultsResult.data);
+      if (circuitsResult.data) setCustomCircuits(circuitsResult.data);
 
       setLoading(false);
     };
@@ -72,6 +77,14 @@ const PublicLayout: React.FC = () => {
 
   const getTeamById = (id: string) => teams.find((t) => t?._id === id);
   const getDriverById = (id: string) => drivers.find((d) => d?._id === id);
+
+  const getCircuitInfo = useCallback((circuitId: string) => {
+    const builtin = getCircuitById(circuitId);
+    if (builtin) return builtin;
+    const custom = customCircuits.find((c) => c._id === circuitId);
+    if (custom) return { id: custom._id, name: custom.name, circuit: custom.circuit, country: custom.country, flag: custom.flag || "🏁" };
+    return null;
+  }, [customCircuits]);
 
   if (loading) {
     return (
@@ -105,7 +118,7 @@ const PublicLayout: React.FC = () => {
   };
 
   return (
-    <ChampionshipContext.Provider value={{ championship, teams, drivers, races, results, loading, getTeamById, getDriverById }}>
+    <ChampionshipContext.Provider value={{ championship, teams, drivers, races, results, customCircuits, loading, getTeamById, getDriverById, getCircuitInfo }}>
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="bg-card border-b sticky top-0 z-50">
