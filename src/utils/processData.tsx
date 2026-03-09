@@ -82,7 +82,7 @@ export const useConstructorStandings = (teams: Team[], results: RaceResult[], ra
 
         result.race?.forEach((driverId, position) => {
             const driver = drivers.find((d) => d?._id === driverId);
-            if (driver && driver.estado !== "Expiloto") {
+            if (driver) {
                 const current = standings.get(driver.teamId);
                 if (current && points[position]) {
                 current.points += points[position];
