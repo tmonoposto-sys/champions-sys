@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronUp, User } from 'lucide-react';
+import { ChevronDown, ChevronUp, Crown, Swords, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { ConstructorStanding } from '@/utils/processData';
+import { ConstructorStanding, getCompetitiveMarker, PodiumTarget } from '@/utils/processData';
 import { Driver } from '@/services/api';
 
 interface Props {
@@ -21,6 +21,19 @@ const getStatusVariant = (estado: string) => {
       return 'outline';
     default:
       return 'default';
+  }
+};
+
+const getPodiumColorClass = (target: PodiumTarget) => {
+  switch (target) {
+    case 1:
+      return "text-yellow-500";
+    case 2:
+      return "text-slate-400";
+    case 3:
+      return "text-amber-600";
+    default:
+      return "text-black dark:text-white";
   }
 };
 
@@ -92,7 +105,20 @@ export const ConstructorStandingsTable = ({ standings, drivers, compact = false 
                         style={{ backgroundColor: standing.team.color }}
                       />
                       <div className="min-w-0 flex-1">
-                        <span className="font-bold text-sm sm:text-base text-foreground block truncate">{standing.team.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm sm:text-base text-foreground block truncate">{standing.team.name}</span>
+                          {(() => {
+                            const marker = getCompetitiveMarker(standing.competitiveStatus);
+                            if (!marker) return null;
+                            const tone = getPodiumColorClass(marker.target);
+
+                            return marker.type === "clinched" ? (
+                              <Crown className={cn("w-4 h-4 flex-shrink-0", tone)} />
+                            ) : (
+                              <Swords className={cn("w-4 h-4 flex-shrink-0", tone)} />
+                            );
+                          })()}
+                        </div>
                         {/* {principal && (
                           <p className="text-xs text-muted-foreground">Jefe: {principal.name}</p>
                         )} */}

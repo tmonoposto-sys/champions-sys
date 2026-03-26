@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, createContext, useContext, Rea
 import { useParams, Outlet, Navigate, Link, useLocation } from "react-router-dom";
 import { getChampionship, listTeams, listDrivers, listRaces, listResults, listCustomCircuits, Team, Driver, Race, RaceResult, CustomCircuit } from "@/services/api";
 import { getCircuitById } from "@/data/circuits";
-import { Loader2, Flag, Users, Car, Calendar } from "lucide-react";
+import { Loader2, Flag, Users, Car, Calendar, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChampionshipContextType {
@@ -110,6 +110,7 @@ const PublicLayout: React.FC = () => {
     { path: `/${code}/drivers`, label: "Pilotos", icon: Users },
     { path: `/${code}/constructors`, label: "Constructores", icon: Car },
     { path: `/${code}/calendar`, label: "Calendario", icon: Calendar },
+    { path: `/${code}/premium`, label: "Premium", icon: Sparkles },
   ];
 
   const isActive = (path: string, exact?: boolean) => {

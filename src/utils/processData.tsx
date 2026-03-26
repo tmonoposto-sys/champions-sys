@@ -3,6 +3,26 @@ import { Driver, Race, RaceResult, Team } from "@/services/api";
 const POINTS_RACE = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 const POINTS_SPRINT = [8, 7, 6, 5, 4, 3, 2, 1];
 const POINTS_FASTEST_LAP = 1;
+const PODIUM_TARGETS = [1, 2, 3] as const;
+
+export type PodiumTarget = 1 | 2 | 3;
+
+export interface PodiumMathStatus {
+  target: PodiumTarget;
+  canFight: boolean;
+  isClinched: boolean;
+}
+
+export interface CompetitiveStatus {
+  p1: PodiumMathStatus;
+  p2: PodiumMathStatus;
+  p3: PodiumMathStatus;
+}
+
+export interface CompetitiveMarker {
+  target: PodiumTarget;
+  type: "clinched" | "fight";
+}
 
 export interface DriverStanding {
   driver: { id: string; name: string; number: number, estado: string };
@@ -11,6 +31,7 @@ export interface DriverStanding {
   wins: number;
   position: number;
   podiums: number;
+  competitiveStatus: CompetitiveStatus;
 }
 
 export interface ConstructorStanding {
@@ -18,10 +39,109 @@ export interface ConstructorStanding {
   points: number;
   wins: number;
   position: number;
+  competitiveStatus: CompetitiveStatus;
 }
+
+interface ComparableStanding {
+  points: number;
+  wins: number;
+}
+
+const compareByPointsAndWins = (a: ComparableStanding, b: ComparableStanding) => {
+  return b.points - a.points || b.wins - a.wins;
+};
+
+const getRemainingRaces = (races: Race[], results: RaceResult[]) => {
+  const playedRaceIds = new Set(results.map((result) => result.raceId));
+  return races.filter((race) => !playedRaceIds.has(race._id));
+};
+
+const getDriverRemainingPotential = (remainingRaces: Race[]) => {
+  return remainingRaces.reduce(
+    (acc, race) => {
+      const winnerPoints = race.isSprint ? POINTS_SPRINT[0] : POINTS_RACE[0];
+      acc.maxPoints += winnerPoints + POINTS_FASTEST_LAP;
+      acc.maxWins += 1;
+      return acc;
+    },
+    { maxPoints: 0, maxWins: 0 }
+  );
+};
+
+const getConstructorRemainingPotential = (remainingRaces: Race[]) => {
+  return remainingRaces.reduce(
+    (acc, race) => {
+      const points = race.isSprint ? POINTS_SPRINT : POINTS_RACE;
+      const bestTwoDrivers = (points[0] || 0) + (points[1] || 0);
+      acc.maxPoints += bestTwoDrivers + POINTS_FASTEST_LAP;
+      acc.maxWins += 1;
+      return acc;
+    },
+    { maxPoints: 0, maxWins: 0 }
+  );
+};
+
+const buildCompetitiveStatus = (
+  current: ComparableStanding,
+  allCurrent: ComparableStanding[],
+  maxPointsToAdd: number,
+  maxWinsToAdd: number
+): CompetitiveStatus => {
+  const currentSorted = [...allCurrent].sort(compareByPointsAndWins);
+  const candidateBest = { points: current.points + maxPointsToAdd, wins: current.wins + maxWinsToAdd };
+  const candidateWorst = { points: current.points, wins: current.wins };
+
+  const statusByTarget = PODIUM_TARGETS.reduce((acc, target) => {
+    const targetStanding = currentSorted[target - 1] ?? { points: 0, wins: 0 };
+    const canFight = compareByPointsAndWins(candidateBest, targetStanding) <= 0;
+
+    const rivalsThatCanPass = allCurrent.reduce((count, rival) => {
+      if (rival === current) return count;
+
+      const rivalBest = {
+        points: rival.points + maxPointsToAdd,
+        wins: rival.wins + maxWinsToAdd
+      };
+
+      if (compareByPointsAndWins(rivalBest, candidateWorst) < 0) {
+        return count + 1;
+      }
+
+      return count;
+    }, 0);
+
+    const isClinched = rivalsThatCanPass < target;
+
+    acc[`p${target}` as keyof CompetitiveStatus] = {
+      target,
+      canFight,
+      isClinched
+    };
+
+    return acc;
+  }, {} as CompetitiveStatus);
+
+  return statusByTarget;
+};
+
+export const getCompetitiveMarker = (status: CompetitiveStatus): CompetitiveMarker | null => {
+  const clinched = PODIUM_TARGETS.find((target) => status[`p${target}` as keyof CompetitiveStatus].isClinched);
+  if (clinched) {
+    return { target: clinched, type: "clinched" };
+  }
+
+  const fight = PODIUM_TARGETS.find((target) => status[`p${target}` as keyof CompetitiveStatus].canFight);
+  if (fight) {
+    return { target: fight, type: "fight" };
+  }
+
+  return null;
+};
 
 export const useDriverStandings = (drivers: Driver[], results: RaceResult[], races: Race[], getTeamById: (id: string) => Team): DriverStanding[] => {
     const standings = new Map<string, { points: number; wins: number, podiums: number }>();
+    const remainingRaces = getRemainingRaces(races, results);
+    const remainingPotential = getDriverRemainingPotential(remainingRaces);
 
     drivers
     .filter((d) => d.estado !== "Expiloto")
@@ -52,7 +172,7 @@ export const useDriverStandings = (drivers: Driver[], results: RaceResult[], rac
         }
     });
 
-    return drivers
+    const computedStandings = drivers
     .filter((d) => d.estado !== "Expiloto")
     .map((driver) => {
     const stats = standings.get(driver?._id) || { points: 0, wins: 0, podiums: 0 };
@@ -63,15 +183,34 @@ export const useDriverStandings = (drivers: Driver[], results: RaceResult[], rac
         points: stats.points,
         wins: stats.wins,
         position: 0,
-        podiums: stats.podiums
+        podiums: stats.podiums,
+        competitiveStatus: {
+          p1: { target: 1, canFight: false, isClinched: false },
+          p2: { target: 2, canFight: false, isClinched: false },
+          p3: { target: 3, canFight: false, isClinched: false }
+        }
     };
     })
-    .sort((a, b) => b.points - a.points || b.wins - a.wins)
+    .sort((a, b) => compareByPointsAndWins(a, b))
     .map((s, i) => ({ ...s, position: i + 1 }));
+
+    const allCurrent = computedStandings.map((standing) => ({ points: standing.points, wins: standing.wins }));
+
+    return computedStandings.map((standing) => ({
+      ...standing,
+      competitiveStatus: buildCompetitiveStatus(
+        { points: standing.points, wins: standing.wins },
+        allCurrent,
+        remainingPotential.maxPoints,
+        remainingPotential.maxWins
+      )
+    }));
 }
 
 export const useConstructorStandings = (teams: Team[], results: RaceResult[], races: Race[], drivers: Driver[]): ConstructorStanding[] => {
     const standings = new Map<string, { points: number; wins: number }>();
+    const remainingRaces = getRemainingRaces(races, results);
+    const remainingPotential = getConstructorRemainingPotential(remainingRaces);
     teams?.forEach((team) => {
         standings.set(team?._id, { points: 0, wins: 0 });
     });
@@ -102,7 +241,7 @@ export const useConstructorStandings = (teams: Team[], results: RaceResult[], ra
         }
     });
 
-    return teams
+    const computedStandings = teams
     .map((team) => {
     const stats = standings.get(team?._id) || { points: 0, wins: 0 };
     return {
@@ -110,8 +249,25 @@ export const useConstructorStandings = (teams: Team[], results: RaceResult[], ra
         points: stats.points,
         wins: stats.wins,
         position: 0,
+        competitiveStatus: {
+          p1: { target: 1, canFight: false, isClinched: false },
+          p2: { target: 2, canFight: false, isClinched: false },
+          p3: { target: 3, canFight: false, isClinched: false }
+        }
     };
     })
-    .sort((a, b) => b.points - a.points || b.wins - a.wins)
+    .sort((a, b) => compareByPointsAndWins(a, b))
     .map((s, i) => ({ ...s, position: i + 1 }));
+
+    const allCurrent = computedStandings.map((standing) => ({ points: standing.points, wins: standing.wins }));
+
+    return computedStandings.map((standing) => ({
+      ...standing,
+      competitiveStatus: buildCompetitiveStatus(
+        { points: standing.points, wins: standing.wins },
+        allCurrent,
+        remainingPotential.maxPoints,
+        remainingPotential.maxWins
+      )
+    }));
 }

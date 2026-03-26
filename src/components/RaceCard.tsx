@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Driver, Race, RaceResult, Team } from '@/services/api';
 import { F1_CIRCUITS } from '@/data/circuits';
+import { Switch } from '@/components/ui/switch';
 
 type CircuitInfo = { id: string; name: string; circuit: string; country: string; flag: string } | null;
 
@@ -21,8 +22,20 @@ const POINTS_FASTEST_LAP = 1;
 
 export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInfo, drivers }: Props) => {
   const [expanded, setExpanded] = useState(false);
+  const [gapMode, setGapMode] = useState<'leader' | 'interval'>('leader');
   const hasResults = !!result?.qualifying?.length;
   const complete = hasResults && !!result?.race?.length;
+
+  const parseLapTimeToSeconds = (lapTime: string): number | null => {
+    if (!lapTime || lapTime === "--:--") return null;
+    const normalized = lapTime.trim().replace(",", ".");
+    if (!normalized.includes(":")) return null;
+    const [minutesPart, secondsPart] = normalized.split(":");
+    const minutes = Number(minutesPart);
+    const seconds = Number(secondsPart);
+    if (Number.isNaN(minutes) || Number.isNaN(seconds)) return null;
+    return minutes * 60 + seconds;
+  };
 
   const qualyWithTimes = (result?.qualifying ?? []).map(q => {
     const driver = drivers?.find(d => d._id === q.driverId);
@@ -46,6 +59,11 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
     ...qualyWithTimes,
     ...driversWithoutTime
   ];
+
+  const qualyPositionByDriver = new Map<string, number>();
+  (result?.qualifying ?? []).forEach((entry, index) => {
+    qualyPositionByDriver.set(entry.driverId, index + 1);
+  });
 
   const getPositionStyle = (position: number) => {
     if (position === 0) return "bg-primary text-primary-foreground";
@@ -117,13 +135,41 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
           <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
             {/* Qualifying Results */}
             <div>
-              <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                <h4 className="font-semibold text-sm sm:text-base text-foreground">Clasificación</h4>
+              <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                  <h4 className="font-semibold text-sm sm:text-base text-foreground">Clasificación</h4>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={cn("text-[10px] sm:text-xs", gapMode === "leader" ? "text-foreground font-semibold" : "text-muted-foreground")}>
+                    Leader
+                  </span>
+                  <Switch
+                    checked={gapMode === "interval"}
+                    onCheckedChange={(checked) => setGapMode(checked ? "interval" : "leader")}
+                  />
+                  <span className={cn("text-[10px] sm:text-xs", gapMode === "interval" ? "text-foreground font-semibold" : "text-muted-foreground")}>
+                    Interval
+                  </span>
+                </div>
               </div>
               <div className="space-y-1.5 sm:space-y-2">
                 {dataShowQualy?.map((entry, index) => {
                   const team = getTeamById(entry.teamId);
+                  const leaderTime = parseLapTimeToSeconds(dataShowQualy[0]?.time || "");
+                  const currentTime = parseLapTimeToSeconds(entry.time || "");
+                  const previousTime = index > 0 ? parseLapTimeToSeconds(dataShowQualy[index - 1]?.time || "") : null;
+                  let gapText = "--";
+                  if (index === 0 && currentTime !== null) {
+                    gapText = "LEADER";
+                  } else if (currentTime !== null) {
+                    if (gapMode === "leader" && leaderTime !== null) {
+                      gapText = `+${(currentTime - leaderTime).toFixed(3)}s`;
+                    } else if (gapMode === "interval" && previousTime !== null) {
+                      gapText = `+${(currentTime - previousTime).toFixed(3)}s`;
+                    }
+                  }
+
                   return (
                     <div
                       key={`qual-${index}`}
@@ -153,7 +199,10 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                           {team?.name || 'Unknown'}
                         </span>
                       </div>
-                      <span className="text-[10px] sm:text-xs text-muted-foreground font-mono whitespace-nowrap">{entry.time}</span>
+                      <div className="flex flex-col items-end min-w-[62px]">
+                        <span className="text-[10px] sm:text-xs text-muted-foreground font-mono whitespace-nowrap">{entry.time}</span>
+                        <span className="text-[10px] sm:text-xs text-primary/80 font-mono whitespace-nowrap">{gapText}</span>
+                      </div>
                     </div>
                   );
                 })}
@@ -179,6 +228,9 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                 {result?.race?.map((driverId, index) => {
                   const driver = getDriverById(driverId);
                   const team = driver ? getTeamById(driver.teamId) : undefined;
+                  const qualyPosition = qualyPositionByDriver.get(driverId);
+                  const racePosition = index + 1;
+                  const delta = qualyPosition ? qualyPosition - racePosition : 0;
                   const racePoints = gp.isSprint ? POINTS_SPRINT : POINTS_RACE;
                   let points = racePoints[index] || 0;
                   const hasFastestLap = result.fastestLap === driverId;
@@ -224,6 +276,16 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                           </span>
                         )}
                       </div>
+                      <span
+                        className={cn(
+                          "text-[10px] sm:text-xs font-semibold whitespace-nowrap min-w-[44px] text-right",
+                          delta > 0 && "text-green-500",
+                          delta < 0 && "text-red-500",
+                          delta === 0 && "text-muted-foreground"
+                        )}
+                      >
+                        {delta > 0 ? `▲ +${delta}` : delta < 0 ? `▼ ${delta}` : "↔ 0"}
+                      </span>
                       {points > 0 && (
                         <span className={cn(
                           "text-[10px] sm:text-xs font-semibold whitespace-nowrap",

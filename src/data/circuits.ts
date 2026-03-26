@@ -6,6 +6,8 @@ export interface F1Circuit {
   flag: string;
 }
 
+export type TrackProfile = "rapido" | "tecnico" | "mixto";
+
 export const F1_CIRCUITS: F1Circuit[] = [
   { id: "bahrain", name: "Gran Premio de Bahréin", circuit: "Circuito Internacional de Bahréin", country: "Bahréin", flag: "🇧🇭" },
   { id: "saudi", name: "Gran Premio de Arabia Saudita", circuit: "Circuito Callejero de Yeda", country: "Arabia Saudita", flag: "🇸🇦" },
@@ -44,4 +46,44 @@ export const F1_CIRCUITS: F1Circuit[] = [
 
 export const getCircuitById = (id: string): F1Circuit | undefined => {
   return F1_CIRCUITS.find(c => c.id === id);
+};
+
+const TRACK_PROFILE_BY_CIRCUIT: Record<string, TrackProfile> = {
+  bahrain: "mixto",
+  saudi: "rapido",
+  australia: "rapido",
+  japan: "tecnico",
+  china: "mixto",
+  miami: "rapido",
+  imola: "tecnico",
+  monaco: "tecnico",
+  canada: "rapido",
+  spain: "tecnico",
+  austria: "rapido",
+  silverstone: "rapido",
+  hungary: "tecnico",
+  belgium: "rapido",
+  netherlands: "tecnico",
+  monza: "rapido",
+  azerbaijan: "rapido",
+  singapore: "tecnico",
+  usa: "mixto",
+  mexico: "mixto",
+  brazil: "mixto",
+  lasvegas: "rapido",
+  qatar: "rapido",
+  abudhabi: "mixto",
+  turkey: "mixto",
+  germany: "rapido",
+  europe: "mixto",
+  tuscan: "rapido",
+  malaysia: "mixto",
+  france: "rapido",
+  illinois: "rapido",
+  south_africa: "rapido",
+  andalucia: "tecnico"
+};
+
+export const getCircuitTrackProfile = (circuitId: string): TrackProfile => {
+  return TRACK_PROFILE_BY_CIRCUIT[circuitId] || "mixto";
 };

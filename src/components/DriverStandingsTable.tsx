@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { DriverStanding } from '@/utils/processData';
+import { Crown, Swords } from 'lucide-react';
+import { DriverStanding, getCompetitiveMarker, PodiumTarget } from '@/utils/processData';
 
 interface Props {
   standings: DriverStanding[];
@@ -17,6 +18,19 @@ const getStatusVariant = (estado: string) => {
       return 'outline';
     default:
       return 'default';
+  }
+};
+
+const getPodiumColorClass = (target: PodiumTarget) => {
+  switch (target) {
+    case 1:
+      return "text-yellow-500";
+    case 2:
+      return "text-slate-400";
+    case 3:
+      return "text-amber-600";
+    default:
+      return "text-black";
   }
 };
 
@@ -72,7 +86,20 @@ export const DriverStandingsTable = ({ standings, compact = false }: Props) => {
                   />
                   <span className="text-lg font-bold text-muted-foreground w-6">{standing.driver.number}</span>
                   <div>
-                    <p className="font-bold text-foreground">{standing.driver.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-foreground">{standing.driver.name}</p>
+                      {(() => {
+                        const marker = getCompetitiveMarker(standing.competitiveStatus);
+                        if (!marker) return null;
+                        const tone = getPodiumColorClass(marker.target);
+                        
+                        return marker.type === "clinched" ? (
+                          <Crown className={cn("w-4 h-4", tone)} />
+                        ) : (
+                          <Swords className={cn("w-4 h-4", tone)} />
+                        );
+                      })()}
+                    </div>
                     <p className="text-xs text-muted-foreground sm:hidden">{standing.team?.name}</p>
                   </div>
                 </div>

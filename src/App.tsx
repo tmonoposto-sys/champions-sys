@@ -21,6 +21,7 @@ import PublicHome from "./pages/public/PublicHome";
 import PublicDrivers from "./pages/public/PublicDrivers";
 import PublicConstructors from "./pages/public/PublicConstructors";
 import PublicCalendar from "./pages/public/PublicCalendar";
+import PublicPremium from "./pages/public/PublicPremium.tsx";
 
 import NotFound from "./pages/NotFound";
 
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="drivers" element={<PublicDrivers />} />
             <Route path="constructors" element={<PublicConstructors />} />
             <Route path="calendar" element={<PublicCalendar />} />
+            <Route path="premium" element={<PublicPremium />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
