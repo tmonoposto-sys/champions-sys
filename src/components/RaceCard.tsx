@@ -161,7 +161,7 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                   const previousTime = index > 0 ? parseLapTimeToSeconds(dataShowQualy[index - 1]?.time || "") : null;
                   let gapText = "--";
                   if (index === 0 && currentTime !== null) {
-                    gapText = "LEADER";
+                    gapText = gapMode === "leader" ? "LEADER" : "INTERVAL";
                   } else if (currentTime !== null) {
                     if (gapMode === "leader" && leaderTime !== null) {
                       gapText = `+${(currentTime - leaderTime).toFixed(3)}s`;

@@ -125,14 +125,16 @@ const buildCompetitiveStatus = (
 };
 
 export const getCompetitiveMarker = (status: CompetitiveStatus): CompetitiveMarker | null => {
-  const clinched = PODIUM_TARGETS.find((target) => status[`p${target}` as keyof CompetitiveStatus].isClinched);
-  if (clinched) {
-    return { target: clinched, type: "clinched" };
-  }
-
+  // Si todavía puede pelear por una corona superior, se prioriza mostrar lucha.
   const fight = PODIUM_TARGETS.find((target) => status[`p${target}` as keyof CompetitiveStatus].canFight);
   if (fight) {
     return { target: fight, type: "fight" };
+  }
+
+  // Solo mostrar corona cuando ya no hay una posición mejor por pelear.
+  const clinched = PODIUM_TARGETS.find((target) => status[`p${target}` as keyof CompetitiveStatus].isClinched);
+  if (clinched) {
+    return { target: clinched, type: "clinched" };
   }
 
   return null;
