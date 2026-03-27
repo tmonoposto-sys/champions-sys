@@ -97,8 +97,13 @@ export const getRaceResult = (code: string, raceId: string) =>
 export const saveQualifyingResult = (code: string, raceId: string, qualifying: QualifyingEntry[]) =>
   callApi("results", "saveQualifying", { code, raceId, qualifying });
 
-export const saveRaceResult = (code: string, raceId: string, race: string[], fastestLap?: string) =>
-  callApi("results", "saveRace", { code, raceId, race, fastestLap });
+export const saveRaceResult = (
+  code: string,
+  raceId: string,
+  race: string[],
+  fastestLap?: string,
+  raceEntries?: RaceEntry[]
+) => callApi("results", "saveRace", { code, raceId, race, fastestLap, raceEntries });
 
 // Circuits (custom per championship)
 export const listCustomCircuits = (code: string) =>
@@ -151,6 +156,14 @@ export interface Race {
 export interface QualifyingEntry {
   driverId: string;
   time: string;
+  penaltySeconds?: number;
+  status?: "OK" | "DSQ";
+}
+
+export interface RaceEntry {
+  driverId: string;
+  baseTime: string;
+  status: "OK" | "DNF" | "DSQ";
 }
 
 export interface RaceResult {
@@ -159,5 +172,6 @@ export interface RaceResult {
   raceId: string;
   qualifying: QualifyingEntry[];
   race: string[];
+  raceEntries?: RaceEntry[];
   fastestLap?: string;
 }

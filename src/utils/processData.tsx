@@ -1,4 +1,5 @@
 import { Driver, Race, RaceResult, Team } from "@/services/api";
+import { getOrderedRaceDriverIds, getOrderedRaceEntries } from "@/utils/raceOrder";
 
 const POINTS_RACE = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 const POINTS_SPRINT = [8, 7, 6, 5, 4, 3, 2, 1];
@@ -155,7 +156,8 @@ export const useDriverStandings = (drivers: Driver[], results: RaceResult[], rac
         const race = races.find((r) => r?._id === result.raceId);
         const points = race?.isSprint ? POINTS_SPRINT : POINTS_RACE;
 
-        result.race?.forEach((driverId, position) => {
+        const orderedRace = getOrderedRaceDriverIds(result);
+        orderedRace.forEach((driverId, position) => {
             const current = standings.get(driverId);
             if (current && points[position]) {
                 current.points += points[position];
@@ -166,8 +168,10 @@ export const useDriverStandings = (drivers: Driver[], results: RaceResult[], rac
 
         // Fastest lap
         if (result.fastestLap) {
-        const flPosition = result.race.indexOf(result.fastestLap);
-        if (flPosition >= 0 && flPosition < 10) {
+        const orderedEntries = getOrderedRaceEntries(result);
+        const flPosition = orderedEntries.findIndex((entry) => entry.driverId === result.fastestLap);
+        const flEntry = flPosition >= 0 ? orderedEntries[flPosition] : null;
+        if (flEntry && flPosition < 10 && flEntry.status === "OK") {
             const current = standings.get(result.fastestLap);
             if (current) current.points += POINTS_FASTEST_LAP;
         }
@@ -221,7 +225,8 @@ export const useConstructorStandings = (teams: Team[], results: RaceResult[], ra
         const race = races.find((r) => r?._id === result.raceId);
         const points = race?.isSprint ? POINTS_SPRINT : POINTS_RACE;
 
-        result.race?.forEach((driverId, position) => {
+        const orderedRace = getOrderedRaceDriverIds(result);
+        orderedRace.forEach((driverId, position) => {
             const driver = drivers.find((d) => d?._id === driverId);
             if (driver) {
                 const current = standings.get(driver.teamId);
@@ -235,8 +240,10 @@ export const useConstructorStandings = (teams: Team[], results: RaceResult[], ra
         // Fastest lap
         if (result.fastestLap) {
             const driver = drivers.find((d) => d?._id === result.fastestLap);
-            const flPosition = result.race.indexOf(result.fastestLap);
-            if (driver && driver.estado !== "Expiloto" && flPosition >= 0 && flPosition < 10) {
+            const orderedEntries = getOrderedRaceEntries(result);
+            const flPosition = orderedEntries.findIndex((entry) => entry.driverId === result.fastestLap);
+            const flEntry = flPosition >= 0 ? orderedEntries[flPosition] : null;
+            if (driver && driver.estado !== "Expiloto" && flEntry && flPosition < 10 && flEntry.status === "OK") {
                 const current = standings.get(driver.teamId);
                 if (current) current.points += POINTS_FASTEST_LAP;
             }

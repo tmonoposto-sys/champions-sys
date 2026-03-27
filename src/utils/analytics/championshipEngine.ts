@@ -1,5 +1,6 @@
 import { Driver, Race, RaceResult, Team } from "@/services/api";
 import { getCircuitTrackProfile, TrackProfile } from "@/data/circuits";
+import { getOrderedRaceDriverIds } from "@/utils/raceOrder";
 
 const POINTS_RACE = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 const POINTS_SPRINT = [8, 7, 6, 5, 4, 3, 2, 1];
@@ -111,7 +112,8 @@ export const computeDriverStats = (
     const pointsTable = getRacePointsTable(race);
     const racePointsByDriver = new Map<string, number>();
 
-    result.race.forEach((driverId, index) => {
+    const orderedRace = getOrderedRaceDriverIds(result);
+    orderedRace.forEach((driverId, index) => {
       const points = pointsTable[index] || 0;
       racePointsByDriver.set(driverId, points);
       const stat = statsMap.get(driverId);
@@ -121,7 +123,7 @@ export const computeDriverStats = (
     });
 
     if (result.fastestLap) {
-      const flPos = result.race.indexOf(result.fastestLap);
+      const flPos = orderedRace.indexOf(result.fastestLap);
       if (flPos >= 0 && flPos < 10) {
         racePointsByDriver.set(result.fastestLap, (racePointsByDriver.get(result.fastestLap) || 0) + POINTS_FASTEST_LAP);
         const stat = statsMap.get(result.fastestLap);
@@ -169,7 +171,8 @@ export const computeConstructorStats = (
     const pointsTable = getRacePointsTable(race);
     const racePointsByTeam = new Map<string, number>();
 
-    result.race.forEach((driverId, index) => {
+    const orderedRace = getOrderedRaceDriverIds(result);
+    orderedRace.forEach((driverId, index) => {
       const driver = driverById.get(driverId);
       if (!driver) return;
       const points = pointsTable[index] || 0;
@@ -182,7 +185,7 @@ export const computeConstructorStats = (
 
     if (result.fastestLap) {
       const flDriver = driverById.get(result.fastestLap);
-      const flPos = result.race.indexOf(result.fastestLap);
+      const flPos = orderedRace.indexOf(result.fastestLap);
       if (flDriver && flPos >= 0 && flPos < 10) {
         racePointsByTeam.set(flDriver.teamId, (racePointsByTeam.get(flDriver.teamId) || 0) + POINTS_FASTEST_LAP);
         const stat = statsMap.get(flDriver.teamId);

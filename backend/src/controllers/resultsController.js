@@ -40,6 +40,7 @@ export const getRaceResult = async (req, res) => {
       raceId,
       qualifying: [], 
       race: [], 
+      raceEntries: [],
       fastestLap: null 
     });
   } catch (error) {
@@ -79,7 +80,7 @@ export const saveQualifyingResult = async (req, res) => {
 
 export const saveRaceResult = async (req, res) => {
   try {
-    const { code, raceId, race, fastestLap } = req.body;
+    const { code, raceId, race, fastestLap, raceEntries } = req.body;
 
     if (!code || !raceId || !race) {
       return res.status(400).json({ error: 'Código, raceId y race son requeridos' });
@@ -93,6 +94,7 @@ export const saveRaceResult = async (req, res) => {
           championshipCode: code.toUpperCase(),
           raceId,
           race, 
+          raceEntries: Array.isArray(raceEntries) ? raceEntries : [],
           fastestLap: fastestLap || null, 
           updatedAt: new Date() 
         } 

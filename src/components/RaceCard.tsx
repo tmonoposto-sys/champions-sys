@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Driver, Race, RaceResult, Team } from '@/services/api';
 import { F1_CIRCUITS } from '@/data/circuits';
 import { Switch } from '@/components/ui/switch';
+import { getOrderedQualifyingEntries, getOrderedRaceEntries } from '@/utils/raceOrder';
 
 type CircuitInfo = { id: string; name: string; circuit: string; country: string; flag: string } | null;
 
@@ -37,22 +38,32 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
     return minutes * 60 + seconds;
   };
 
-  const qualyWithTimes = (result?.qualifying ?? []).map(q => {
+  const getEffectiveQualySeconds = (entry: { time: string; penaltySeconds?: number; status?: "OK" | "DSQ" }) => {
+    if (entry.status === "DSQ") return null;
+    const base = parseLapTimeToSeconds(entry.time || "");
+    if (base === null) return null;
+    return base + Number(entry.penaltySeconds || 0);
+  };
+
+  const orderedQualifying = getOrderedQualifyingEntries(result?.qualifying ?? []);
+  const qualyWithTimes = orderedQualifying.map((q) => {
     const driver = drivers?.find(d => d._id === q.driverId);
-
     if (!driver) return null;
-
     return {
       ...driver,
-      time: q.time
+      time: q.time,
+      penaltySeconds: q.penaltySeconds,
+      status: q.status
     };
-  })?.filter(Boolean);
+  }).filter(Boolean);
 
   const driversWithoutTime = drivers.filter(d => d.estado == "Titular")
     .filter(d => !(result?.qualifying ?? [])?.some(q => q.driverId === d._id))
     .map(d => ({
       ...d,
-      time: "--:--"
+      time: "--:--",
+      penaltySeconds: 0,
+      status: "OK" as const
     }));
 
   const dataShowQualy = [
@@ -61,9 +72,10 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
   ];
 
   const qualyPositionByDriver = new Map<string, number>();
-  (result?.qualifying ?? []).forEach((entry, index) => {
+  orderedQualifying.forEach((entry, index) => {
     qualyPositionByDriver.set(entry.driverId, index + 1);
   });
+  const orderedRaceEntries = getOrderedRaceEntries(result);
 
   const getPositionStyle = (position: number) => {
     if (position === 0) return "bg-primary text-primary-foreground";
@@ -156,9 +168,9 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
               <div className="space-y-1.5 sm:space-y-2">
                 {dataShowQualy?.map((entry, index) => {
                   const team = getTeamById(entry.teamId);
-                  const leaderTime = parseLapTimeToSeconds(dataShowQualy[0]?.time || "");
-                  const currentTime = parseLapTimeToSeconds(entry.time || "");
-                  const previousTime = index > 0 ? parseLapTimeToSeconds(dataShowQualy[index - 1]?.time || "") : null;
+                  const leaderTime = getEffectiveQualySeconds(dataShowQualy[0]);
+                  const currentTime = getEffectiveQualySeconds(entry);
+                  const previousTime = index > 0 ? getEffectiveQualySeconds(dataShowQualy[index - 1]) : null;
                   let gapText = "--";
                   if (index === 0 && currentTime !== null) {
                     gapText = gapMode === "leader" ? "LEADER" : "INTERVAL";
@@ -192,7 +204,7 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                         <span 
                           className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0"
                           style={{ 
-                            backgroundColor: `${team?.color}20` || '#66666620',
+                            backgroundColor: team?.color ? `${team.color}20` : '#66666620',
                             color: team?.color || '#666'
                           }}
                         >
@@ -200,7 +212,10 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                         </span>
                       </div>
                       <div className="flex flex-col items-end min-w-[62px]">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground font-mono whitespace-nowrap">{entry.time}</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground font-mono whitespace-nowrap">
+                          {entry.status === "DSQ" ? "DSQ" : entry.time}
+                          {(entry.penaltySeconds || 0) > 0 && entry.status !== "DSQ" ? ` (+${entry.penaltySeconds}s)` : ""}
+                        </span>
                         <span className="text-[10px] sm:text-xs text-primary/80 font-mono whitespace-nowrap">{gapText}</span>
                       </div>
                     </div>
@@ -225,17 +240,19 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                 )}
               </div>
               <div className="space-y-1.5 sm:space-y-2">
-                {result?.race?.map((driverId, index) => {
+                {orderedRaceEntries.map((raceEntry, index) => {
+                  const driverId = raceEntry.driverId;
                   const driver = getDriverById(driverId);
                   const team = driver ? getTeamById(driver.teamId) : undefined;
                   const qualyPosition = qualyPositionByDriver.get(driverId);
                   const racePosition = index + 1;
                   const delta = qualyPosition ? qualyPosition - racePosition : 0;
                   const racePoints = gp.isSprint ? POINTS_SPRINT : POINTS_RACE;
-                  let points = racePoints[index] || 0;
+                  const isClassified = raceEntry.status === "OK";
+                  let points = isClassified ? (racePoints[index] || 0) : 0;
                   const hasFastestLap = result.fastestLap === driverId;
                   const fastestLapEligible = hasFastestLap && index < 10;
-                  if (fastestLapEligible) {
+                  if (fastestLapEligible && isClassified) {
                     points += POINTS_FASTEST_LAP;
                   }
                   return (
@@ -263,7 +280,7 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                         <span 
                           className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0"
                           style={{ 
-                            backgroundColor: `${team?.color}20` || '#66666620',
+                            backgroundColor: team?.color ? `${team.color}20` : '#66666620',
                             color: team?.color || '#666'
                           }}
                         >
@@ -292,6 +309,11 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                           fastestLapEligible ? "text-purple-500" : "text-primary"
                         )}>
                           +{points}
+                        </span>
+                      )}
+                      {raceEntry.status !== "OK" && (
+                        <span className="text-[10px] sm:text-xs px-1 py-0.5 rounded bg-red-500/15 text-red-500 font-semibold">
+                          {raceEntry.status}
                         </span>
                       )}
                     </div>
