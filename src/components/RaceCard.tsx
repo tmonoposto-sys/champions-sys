@@ -71,9 +71,10 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
     ...driversWithoutTime
   ];
 
+  // Misma parrilla que la columna de clasificación (incluye titulares sin tiempo al final)
   const qualyPositionByDriver = new Map<string, number>();
-  orderedQualifying.forEach((entry, index) => {
-    qualyPositionByDriver.set(entry.driverId, index + 1);
+  dataShowQualy.forEach((entry, index) => {
+    qualyPositionByDriver.set(entry._id, index + 1);
   });
   const orderedRaceEntries = getOrderedRaceEntries(result);
 
@@ -246,7 +247,8 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                   const team = driver ? getTeamById(driver.teamId) : undefined;
                   const qualyPosition = qualyPositionByDriver.get(driverId);
                   const racePosition = index + 1;
-                  const delta = qualyPosition ? qualyPosition - racePosition : 0;
+                  const delta =
+                    qualyPosition !== undefined ? qualyPosition - racePosition : null;
                   const racePoints = gp.isSprint ? POINTS_SPRINT : POINTS_RACE;
                   const isClassified = raceEntry.status === "OK";
                   let points = isClassified ? (racePoints[index] || 0) : 0;
@@ -296,12 +298,18 @@ export const RaceCard = ({ gp, result, getDriverById, getTeamById, getCircuitInf
                       <span
                         className={cn(
                           "text-[10px] sm:text-xs font-semibold whitespace-nowrap min-w-[44px] text-right",
-                          delta > 0 && "text-green-500",
-                          delta < 0 && "text-red-500",
-                          delta === 0 && "text-muted-foreground"
+                          delta !== null && delta > 0 && "text-green-500",
+                          delta !== null && delta < 0 && "text-red-500",
+                          delta !== null && delta === 0 && "text-muted-foreground"
                         )}
                       >
-                        {delta > 0 ? `▲ +${delta}` : delta < 0 ? `▼ ${delta}` : "↔ 0"}
+                        {delta === null
+                          ? "—"
+                          : delta > 0
+                            ? `▲ +${delta}`
+                            : delta < 0
+                              ? `▼ ${delta}`
+                              : "↔ 0"}
                       </span>
                       {points > 0 && (
                         <span className={cn(
